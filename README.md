@@ -23,10 +23,10 @@ If you do not configure Gemini API, it will be handled by MyMemory API(Free API)
 - **Content Translation**: Translates post content from English to Japanese.
     - Uses the Gemini API for high-quality translations if an API key is provided.
     - Falls back to the free MyMemory API if the Gemini API is not configured or fails.
-- **Discord Notifications**: Sends formatted messages to a specified Discord webhook.
+- **Discord Notifications**: Sends card-style Discord embed notifications to a specified webhook.
 - **Media Handling**:
-    - For text posts, it shows the original and translated versions.
-    - For image posts, it attaches the image directly to the Discord message (if under 8MB) or sends a link.
+    - For text posts, it shows translated text, post link, and original text in a card.
+    - For image posts, it shows the image in the card and attaches the image directly to the Discord message (if under 8MB) or sends a link.
     - For video posts, it sends a link to the video.
 - **Flexible Execution**: Can be run once or as a continuous daemon process.
 - **Silent Mode**: Can be run with suppressed output for cron jobs or systemd services.
@@ -63,9 +63,11 @@ If you do not configure Gemini API, it will be handled by MyMemory API(Free API)
     # .env file
     DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/your/webhook_url"
     GEMINI_API_KEY="your_gemini_api_key_optional"
+    GEMINI_MODEL="gemini-3.5-flash"
     ```
     - `DISCORD_WEBHOOK_URL` (Required): The webhook URL for the Discord channel you want to send notifications to.
     - `GEMINI_API_KEY` (Optional): Your Google Gemini API key for translation. If omitted, the script will use a free, rate-limited translation service.
+    - `GEMINI_MODEL` (Optional): Gemini model used for translation. Defaults to `gemini-3.5-flash`.
 
 5.  **Create the translation prompt file:**
     Create a file named `prompt` in the root of the project directory. This file contains the instructions for the translation model. Example:
@@ -104,6 +106,24 @@ To suppress all logging output except for errors, use the `-s` or `--silent` fla
 ./truth-social-monitor -d 300 -s
 ```
 
+### Docker Compose
+Create `.env` from the example and set your Discord webhook:
+```bash
+cp .env.example .env
+```
+
+Start the monitor in daemon mode with the default 300 second interval:
+```bash
+docker compose up -d
+```
+
+Stop it:
+```bash
+docker compose down
+```
+
+The Docker setup keeps processed post cache data in the `truth-social-cache` volume.
+
 crontab example:
 ```bash
 5 * * * * /usr/bin/python3 /path/to/truth-social-monitor -s >> /dev/null 2>&1
@@ -124,4 +144,3 @@ crontab example:
     - The content is sent to the `translate_with_gemini` function. If a `GEMINI_API_KEY` is present, it uses the Gemini API. Otherwise, it falls back to `translate_with_free_service` (MyMemory API).
 5.  **Notify**: A message is constructed and sent to the configured Discord webhook. It handles text, images, and videos differently to provide the best notification format.
 6.  **Save Cache**: After a post is successfully processed, its hash is saved to a file in the `./cache` directory to prevent reprocessing. The cache is automatically pruned to keep only the 30 most recent entries.
-

@@ -1,0 +1,11 @@
+services:
+  truth-social-monitor:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - truth-social-cache:/app/cache
+    restart: unless-stopped
+
+volumes:
+  truth-social-cache:
