@@ -70,16 +70,48 @@ def validate_prompt_template(filepath, prompt_template):
         print_error(f"Error loading prompt file: {filepath} must include {{content}} placeholder.")
         sys.exit(1)
 
+def load_prompt_sections(filepath="prompt"):
+    """Load translation and headline prompt templates from one prompt file."""
+    raw_prompt = load_prompt(filepath)
+    sections = {}
+    current_section = None
+    current_lines = []
+
+    def save_current_section():
+        if current_section:
+            sections[current_section] = "\n".join(current_lines).strip()
+
+    for line in raw_prompt.splitlines():
+        marker = line.strip().lower()
+        if marker in ("[translation]", "[headline]"):
+            save_current_section()
+            current_section = marker.strip("[]")
+            current_lines = []
+            continue
+        if current_section is None:
+            print_error(f"Error loading prompt file: {filepath} must start with [translation] or [headline].")
+            sys.exit(1)
+        current_lines.append(line)
+
+    save_current_section()
+
+    missing_sections = [name for name in ("translation", "headline") if not sections.get(name)]
+    if missing_sections:
+        print_error(f"Error loading prompt file: {filepath} missing sections: {', '.join(missing_sections)}.")
+        sys.exit(1)
+    return sections
+
 def render_prompt_template(prompt_template, content):
     """Render a prompt template with the post content."""
     if "{content}" not in prompt_template:
         raise ValueError("prompt template must include {content} placeholder")
     return prompt_template.replace("{content}", content)
 
-TRANSLATION_PROMPT = load_prompt()
-HEADLINE_PROMPT = load_prompt("headline_prompt")
-validate_prompt_template("prompt", TRANSLATION_PROMPT)
-validate_prompt_template("headline_prompt", HEADLINE_PROMPT)
+PROMPT_SECTIONS = load_prompt_sections()
+TRANSLATION_PROMPT = PROMPT_SECTIONS["translation"]
+HEADLINE_PROMPT = PROMPT_SECTIONS["headline"]
+validate_prompt_template("prompt [translation]", TRANSLATION_PROMPT)
+validate_prompt_template("prompt [headline]", HEADLINE_PROMPT)
 
 def get_post_hash(post_id, created_at):
     """generate a unique hash for the post based on its ID and creation time."""

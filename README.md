@@ -11,12 +11,11 @@ TARGET_LANGUAGE=ja # Change to your preferred language
 
 `prompt` file example:
 ```
+[translation]
 Please translate the following English text into natural-sounding Japanese.
 {content}
-```
 
-`headline_prompt` file example:
-```
+[headline]
 Create a concise Japanese news headline for the following Truth Social post.
 {content}
 ```
@@ -76,17 +75,16 @@ If you do not configure Gemini API, it will be handled by MyMemory API(Free API)
     - `GEMINI_API_KEY` (Optional): Your Google Gemini API key for translation. If omitted, the script will use a free, rate-limited translation service.
     - `GEMINI_MODEL` (Optional): Gemini model used for translation. Defaults to `gemini-3.5-flash`.
 
-5.  **Create the prompt files:**
-    Create `prompt` and `headline_prompt` in the root of the project directory. These files contain the instructions for translation and headline generation. Use `{content}` where the post text should be inserted. Examples:
+5.  **Create the prompt file:**
+    Create `prompt` in the root of the project directory. This file contains both translation and headline generation instructions. Use `[translation]` and `[headline]` sections, and include `{content}` in each section where the post text should be inserted. Example:
 
     ```text
     # prompt file
+    [translation]
     Please translate the following English text into natural-sounding Japanese.
     {content}
-    ```
 
-    ```text
-    # headline_prompt file
+    [headline]
     Create a concise Japanese news headline for the following Truth Social post.
     {content}
     ```
