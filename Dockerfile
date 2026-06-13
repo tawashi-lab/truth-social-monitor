@@ -27,9 +27,10 @@ RUN build_arch="${TARGETARCH:-$(uname -m)}" \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY truth-social-monitor prompt ./
-RUN chmod +x /app/truth-social-monitor \
+COPY truth-social-monitor prompt headline_prompt ./
+RUN python -c "from pathlib import Path; [p.write_bytes(p.read_bytes().replace(b'\r\n', b'\n')) for p in map(Path, ['truth-social-monitor', 'prompt', 'headline_prompt'])]" \
+    && chmod +x /app/truth-social-monitor \
     && mkdir -p /app/cache
 
-ENTRYPOINT ["/app/truth-social-monitor"]
+ENTRYPOINT ["python3", "/app/truth-social-monitor"]
 CMD ["-d", "60"]
